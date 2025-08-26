@@ -1244,413 +1244,301 @@
             measurementId: "G-TF5YS628BB"
         };
 
-        // Inisialisasi Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const auth = firebase.auth();
-
-        // Elemen DOM
-        const loginSection = document.getElementById('login-section');
-        const userInfoSection = document.getElementById('user-info');
-        const googleLoginBtn = document.getElementById('google-login');
-        const logoutBtn = document.getElementById('logout-btn');
-        const commentForm = document.getElementById('comment-form');
-        const commentsList = document.getElementById('comments-list');
-        const userPhoto = document.getElementById('user-photo');
-        const userName = document.getElementById('user-name');
-
-        // Fungsi sanitasi HTML untuk mencegah XSS
-        function sanitizeHTML(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+         // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    
+    // Elemen DOM
+    const loginSection = document.getElementById('login-section');
+    const userInfoSection = document.getElementById('user-info');
+    const googleLoginBtn = document.getElementById('google-login');
+    const logoutBtn = document.getElementById('logout-btn');
+    const commentForm = document.getElementById('comment-form');
+    const commentsList = document.getElementById('comments-list');
+    const userPhoto = document.getElementById('user-photo');
+    const userName = document.getElementById('user-name');
+    
+    // Login dengan Google
+    googleLoginBtn.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then((result) => {
+                // Login berhasil
+                console.log('Login berhasil:', result.user);
+            })
+            .catch((error) => {
+                console.error('Error login:', error);
+                sweetAlert.show({
+                    title: 'Login Gagal',
+                    text: 'Terjadi kesalahan saat login. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonText: 'Mengerti'
+                });
+            });
+    });
+    
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut()
+            .then(() => {
+                console.log('Logout berhasil');
+            })
+            .catch((error) => {
+                console.error('Error logout:', error);
+            });
+    });
+    
+    // Kirim komentar
+    commentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const commentText = document.getElementById('comment-text').value.trim();
+        if (!commentText) return;
+        
+        const user = auth.currentUser;
+        if (!user) {
+            sweetAlert.show({
+                title: 'Perlu Login',
+                text: 'Anda harus login terlebih dahulu untuk mengirim komentar.',
+                icon: 'warning',
+                confirmButtonText: 'Mengerti'
+            });
+            return;
         }
-
-        // Login dengan Google
-        googleLoginBtn.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    // Login berhasil
-                    console.log('Login berhasil:', result.user);
-                })
-                .catch((error) => {
-                    console.error('Error login:', error);
-                    sweetAlert.show({
-                        title: 'Login Gagal',
-                        text: 'Terjadi kesalahan saat login. Silakan coba lagi.',
-                        icon: 'error',
-                        confirmButtonText: 'Mengerti'
-                    });
+        
+        // Simpan komentar ke database
+        const newCommentKey = database.ref().child('comments').push().key;
+        const timestamp = Date.now();
+        
+        const commentData = {
+            uid: user.uid,
+            user: {
+                name: user.displayName,
+                photoURL: user.photoURL
+            },
+            text: commentText,
+            timestamp: timestamp,
+            replies: {}
+        };
+        
+        const updates = {};
+        updates['/comments/' + newCommentKey] = commentData;
+        updates['/users/' + user.uid + '/lastActivity'] = timestamp;
+        
+        database.ref().update(updates)
+            .then(() => {
+                console.log('Komentar berhasil dikirim');
+                document.getElementById('comment-text').value = '';
+            })
+            .catch((error) => {
+                console.error('Error mengirim komentar:', error);
+                sweetAlert.show({
+                    title: 'Gagal Mengirim',
+                    text: 'Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonText: 'Mengerti'
                 });
+            });
+    });
+    
+    // Fungsi untuk membuat elemen komentar
+    function createCommentElement(commentId, commentData) {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment bg-gray-50 p-4 rounded-lg';
+        commentDiv.id = 'comment-' + commentId;
+        
+        const date = new Date(commentData.timestamp);
+        const formattedDate = date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
-
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut()
-                .then(() => {
-                    console.log('Logout berhasil');
-                })
-                .catch((error) => {
-                    console.error('Error logout:', error);
-                });
-        });
-
-        // Kirim komentar
-        commentForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const commentText = document.getElementById('comment-text').value.trim();
-            if (!commentText) return;
-
-            const user = auth.currentUser;
-            if (!user) {
+        
+        commentDiv.innerHTML = `
+            <div class="flex items-start">
+                <img src="${commentData.user.photoURL}" alt="${commentData.user.name}" class="w-10 h-10 rounded-full mr-3">
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-semibold">${commentData.user.name}</h4>
+                        <span class="text-sm text-gray-500">${formattedDate}</span>
+                    </div>
+                    <p class="mt-2 text-gray-700">${commentData.text}</p>
+                    <button class="reply-btn mt-2 text-blue-600 text-sm font-medium" data-comment-id="${commentId}">
+                        <i class="fas fa-reply mr-1"></i> Balas
+                    </button>
+                </div>
+            </div>
+            <div class="reply-form mt-3 ml-12 hidden">
+                <textarea class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Tulis balasan..."></textarea>
+                <div class="mt-2 flex justify-end">
+                    <button class="cancel-reply bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg mr-2">Batal</button>
+                    <button class="submit-reply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Kirim</button>
+                </div>
+            </div>
+            <div class="replies-container mt-4 ml-12"></div>
+        `;
+        
+        // Event listener untuk tombol balas
+        const replyBtn = commentDiv.querySelector('.reply-btn');
+        const replyForm = commentDiv.querySelector('.reply-form');
+        const cancelReplyBtn = commentDiv.querySelector('.cancel-reply');
+        const submitReplyBtn = commentDiv.querySelector('.submit-reply');
+        const replyTextarea = commentDiv.querySelector('textarea');
+        
+        replyBtn.addEventListener('click', () => {
+            if (!auth.currentUser) {
                 sweetAlert.show({
                     title: 'Perlu Login',
-                    text: 'Anda harus login terlebih dahulu untuk mengirim komentar.',
+                    text: 'Anda harus login terlebih dahulu untuk membalas komentar.',
                     icon: 'warning',
                     confirmButtonText: 'Mengerti'
                 });
                 return;
             }
-
-            // Sanitasi input sebelum disimpan
-            const sanitizedText = sanitizeHTML(commentText);
-
-            // Simpan komentar ke database
-            const newCommentKey = database.ref().child('comments').push().key;
+            replyForm.classList.toggle('hidden');
+        });
+        
+        cancelReplyBtn.addEventListener('click', () => {
+            replyForm.classList.add('hidden');
+            replyTextarea.value = '';
+        });
+        
+        submitReplyBtn.addEventListener('click', () => {
+            const replyText = replyTextarea.value.trim();
+            if (!replyText) return;
+            
+            const user = auth.currentUser;
+            const newReplyKey = database.ref().child('replies').push().key;
             const timestamp = Date.now();
-
-            const commentData = {
+            
+            const replyData = {
                 uid: user.uid,
                 user: {
                     name: user.displayName,
                     photoURL: user.photoURL
                 },
-                text: sanitizedText,
-                timestamp: timestamp,
-                replies: {}
+                text: replyText,
+                timestamp: timestamp
             };
-
+            
             const updates = {};
-            updates['/comments/' + newCommentKey] = commentData;
+            updates[`/comments/${commentId}/replies/${newReplyKey}`] = replyData;
             updates['/users/' + user.uid + '/lastActivity'] = timestamp;
-
+            
             database.ref().update(updates)
                 .then(() => {
-                    console.log('Komentar berhasil dikirim');
-                    document.getElementById('comment-text').value = '';
+                    console.log('Balasan berhasil dikirim');
+                    replyTextarea.value = '';
+                    replyForm.classList.add('hidden');
                 })
                 .catch((error) => {
-                    console.error('Error mengirim komentar:', error);
+                    console.error('Error mengirim balasan:', error);
                     sweetAlert.show({
                         title: 'Gagal Mengirim',
-                        text: 'Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.',
+                        text: 'Terjadi kesalahan saat mengirim balasan. Silakan coba lagi.',
                         icon: 'error',
                         confirmButtonText: 'Mengerti'
                     });
                 });
         });
-
-        // Fungsi untuk membuat elemen komentar
-        function createCommentElement(commentId, commentData) {
-            const commentDiv = document.createElement('div');
-            commentDiv.className = 'comment bg-gray-50 p-4 rounded-lg';
-            commentDiv.id = 'comment-' + commentId;
-
-            const date = new Date(commentData.timestamp);
-            const formattedDate = date.toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+        
+        // Tambahkan balasan jika ada
+        if (commentData.replies) {
+            const repliesContainer = commentDiv.querySelector('.replies-container');
+            Object.entries(commentData.replies).forEach(([replyId, replyData]) => {
+                const replyElement = createReplyElement(replyId, replyData);
+                repliesContainer.appendChild(replyElement);
             });
-
-            // Cek apakah user saat ini adalah pemilik komentar
-            const currentUser = auth.currentUser;
-            const isCommentOwner = currentUser && currentUser.uid === commentData.uid;
-
-            commentDiv.innerHTML = `
-        <div class="flex items-start">
-            <img src="${sanitizeHTML(commentData.user.photoURL)}" alt="${sanitizeHTML(commentData.user.name)}" class="w-10 h-10 rounded-full mr-3">
-            <div class="flex-1">
-                <div class="flex justify-between items-start">
-                    <h4 class="font-semibold">${sanitizeHTML(commentData.user.name)}</h4>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-500 mr-2">${formattedDate}</span>
-                        ${isCommentOwner ? `
-                            <button class="delete-comment text-red-600 hover:text-red-800 text-sm" data-comment-id="${commentId}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-                <p class="mt-2 text-gray-700">${commentData.text}</p>
-                <button class="reply-btn mt-2 text-blue-600 text-sm font-medium" data-comment-id="${commentId}">
-                    <i class="fas fa-reply mr-1"></i> Balas
-                </button>
-            </div>
-        </div>
-        <div class="reply-form mt-3 ml-12 hidden">
-            <textarea class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Tulis balasan..."></textarea>
-            <div class="mt-2 flex justify-end">
-                <button class="cancel-reply bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg mr-2">Batal</button>
-                <button class="submit-reply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Kirim</button>
-            </div>
-        </div>
-        <div class="replies-container mt-4 ml-12"></div>
-    `;
-
-            // Event listener untuk tombol hapus komentar
-            if (isCommentOwner) {
-                const deleteBtn = commentDiv.querySelector('.delete-comment');
-                deleteBtn.addEventListener('click', () => {
-                    sweetAlert.show({
-                        title: 'Hapus Komentar',
-                        text: 'Apakah Anda yakin ingin menghapus komentar ini?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Ya, Hapus',
-                        cancelButtonText: 'Batal',
-                        onConfirm: () => {
-                            database.ref('comments/' + commentId).remove()
-                                .then(() => {
-                                    console.log('Komentar berhasil dihapus');
-                                })
-                                .catch((error) => {
-                                    console.error('Error menghapus komentar:', error);
-                                    sweetAlert.show({
-                                        title: 'Gagal Menghapus',
-                                        text: 'Terjadi kesalahan saat menghapus komentar.',
-                                        icon: 'error',
-                                        confirmButtonText: 'Mengerti'
-                                    });
-                                });
-                        }
-                    });
-                });
-            }
-
-            // Event listener untuk tombol balas
-            const replyBtn = commentDiv.querySelector('.reply-btn');
-            const replyForm = commentDiv.querySelector('.reply-form');
-            const cancelReplyBtn = commentDiv.querySelector('.cancel-reply');
-            const submitReplyBtn = commentDiv.querySelector('.submit-reply');
-            const replyTextarea = commentDiv.querySelector('textarea');
-
-            replyBtn.addEventListener('click', () => {
-                if (!auth.currentUser) {
-                    sweetAlert.show({
-                        title: 'Perlu Login',
-                        text: 'Anda harus login terlebih dahulu untuk membalas komentar.',
-                        icon: 'warning',
-                        confirmButtonText: 'Mengerti'
-                    });
-                    return;
-                }
-                replyForm.classList.toggle('hidden');
-            });
-
-            cancelReplyBtn.addEventListener('click', () => {
-                replyForm.classList.add('hidden');
-                replyTextarea.value = '';
-            });
-
-            submitReplyBtn.addEventListener('click', () => {
-                const replyText = replyTextarea.value.trim();
-                if (!replyText) return;
-
-                const user = auth.currentUser;
-                const newReplyKey = database.ref().child('replies').push().key;
-                const timestamp = Date.now();
-
-                // Sanitasi input sebelum disimpan
-                const sanitizedText = sanitizeHTML(replyText);
-
-                const replyData = {
-                    uid: user.uid,
-                    user: {
-                        name: user.displayName,
-                        photoURL: user.photoURL
-                    },
-                    text: sanitizedText,
-                    timestamp: timestamp
-                };
-
-                const updates = {};
-                updates[`/comments/${commentId}/replies/${newReplyKey}`] = replyData;
-                updates['/users/' + user.uid + '/lastActivity'] = timestamp;
-
-                database.ref().update(updates)
-                    .then(() => {
-                        console.log('Balasan berhasil dikirim');
-                        replyTextarea.value = '';
-                        replyForm.classList.add('hidden');
-                    })
-                    .catch((error) => {
-                        console.error('Error mengirim balasan:', error);
-                        sweetAlert.show({
-                            title: 'Gagal Mengirim',
-                            text: 'Terjadi kesalahan saat mengirim balasan. Silakan coba lagi.',
-                            icon: 'error',
-                            confirmButtonText: 'Mengerti'
-                        });
-                    });
-            });
-
-            // Tambahkan balasan jika ada
-            if (commentData.replies) {
-                const repliesContainer = commentDiv.querySelector('.replies-container');
-                Object.entries(commentData.replies).forEach(([replyId, replyData]) => {
-                    const replyElement = createReplyElement(replyId, replyData, commentId);
-                    repliesContainer.appendChild(replyElement);
-                });
-            }
-
-            return commentDiv;
         }
-
-        // Fungsi untuk membuat elemen balasan
-        function createReplyElement(replyId, replyData, commentId) {
-            const replyDiv = document.createElement('div');
-            replyDiv.className = 'reply bg-white p-3 rounded-lg border border-gray-200 mt-3';
-            replyDiv.id = `reply-${commentId}-${replyId}`;
-
-            const date = new Date(replyData.timestamp);
-            const formattedDate = date.toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            // Cek apakah user saat ini adalah pemilik balasan
-            const currentUser = auth.currentUser;
-            const isReplyOwner = currentUser && currentUser.uid === replyData.uid;
-
-            replyDiv.innerHTML = `
-        <div class="flex items-start">
-            <img src="${sanitizeHTML(replyData.user.photoURL)}" alt="${sanitizeHTML(replyData.user.name)}" class="w-8 h-8 rounded-full mr-3">
-            <div class="flex-1">
-                <div class="flex justify-between items-start">
-                    <h5 class="font-semibold text-sm">${sanitizeHTML(replyData.user.name)}</h5>
-                    <div class="flex items-center">
-                        <span class="text-xs text-gray-500 mr-2">${formattedDate}</span>
-                        ${isReplyOwner ? `
-                            <button class="delete-reply text-red-600 hover:text-red-800 text-xs" data-comment-id="${commentId}" data-reply-id="${replyId}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-                <p class="mt-1 text-gray-700 text-sm">${replyData.text}</p>
-            </div>
-        </div>
-    `;
-
-            // Event listener untuk tombol hapus balasan
-            if (isReplyOwner) {
-                const deleteBtn = replyDiv.querySelector('.delete-reply');
-                deleteBtn.addEventListener('click', () => {
-                    sweetAlert.show({
-                        title: 'Hapus Balasan',
-                        text: 'Apakah Anda yakin ingin menghapus balasan ini?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Ya, Hapus',
-                        cancelButtonText: 'Batal',
-                        onConfirm: () => {
-                            database.ref(`comments/${commentId}/replies/${replyId}`).remove()
-                                .then(() => {
-                                    console.log('Balasan berhasil dihapus');
-                                })
-                                .catch((error) => {
-                                    console.error('Error menghapus balasan:', error);
-                                    sweetAlert.show({
-                                        title: 'Gagal Menghapus',
-                                        text: 'Terjadi kesalahan saat menghapus balasan.',
-                                        icon: 'error',
-                                        confirmButtonText: 'Mengerti'
-                                    });
-                                });
-                        }
-                    });
-                });
-            }
-
-            return replyDiv;
-        }
-
-        // Auth state observer
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User sudah login
-                loginSection.classList.add('hidden');
-                userInfoSection.classList.remove('hidden');
-                userPhoto.src = user.photoURL;
-                userName.textContent = user.displayName;
-
-                // Simpan/update data user di database
-                const userData = {
-                    name: user.displayName,
-                    photoURL: user.photoURL,
-                    lastLogin: Date.now()
-                };
-
-                database.ref('users/' + user.uid).update(userData)
-                    .catch((error) => {
-                        console.error('Error menyimpan data user:', error);
-                    });
-            } else {
-                // User belum login
-                loginSection.classList.remove('hidden');
-                userInfoSection.classList.add('hidden');
-            }
-
-            // Perbarui semua komentar untuk menampilkan/menyembunyikan tombol hapus
-            const allComments = document.querySelectorAll('.comment');
-            allComments.forEach(comment => {
-                const commentId = comment.id.replace('comment-', '');
-                const commentData = database.ref('comments/' + commentId).once('value')
-                    .then(snapshot => {
-                        if (snapshot.exists()) {
-                            const commentElement = createCommentElement(commentId, snapshot.val());
-                            comment.parentNode.replaceChild(commentElement, comment);
-                        }
-                    });
-            });
+        
+        return commentDiv;
+    }
+    
+    // Fungsi untuk membuat elemen balasan
+    function createReplyElement(replyId, replyData) {
+        const replyDiv = document.createElement('div');
+        replyDiv.className = 'reply bg-white p-3 rounded-lg border border-gray-200 mt-3';
+        
+        const date = new Date(replyData.timestamp);
+        const formattedDate = date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
-
-        // Realtime listener untuk komentar
-        database.ref('comments').orderByChild('timestamp').on('value', (snapshot) => {
-            const commentsData = snapshot.val();
-            commentsList.innerHTML = '';
-
-            if (!commentsData) {
-                commentsList.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-comments text-3xl mb-3"></i>
-                <p>Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+        
+        replyDiv.innerHTML = `
+            <div class="flex items-start">
+                <img src="${replyData.user.photoURL}" alt="${replyData.user.name}" class="w-8 h-8 rounded-full mr-3">
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h5 class="font-semibold text-sm">${replyData.user.name}</h5>
+                        <span class="text-xs text-gray-500">${formattedDate}</span>
+                    </div>
+                    <p class="mt-1 text-gray-700 text-sm">${replyData.text}</p>
+                </div>
             </div>
         `;
-                return;
-            }
-
-            // Ubah object menjadi array dan urutkan berdasarkan timestamp (terbaru di atas)
-            const commentsArray = Object.entries(commentsData)
-                .map(([id, data]) => ({
-                    id,
-                    ...data
-                }))
-                .sort((a, b) => b.timestamp - a.timestamp);
-
-            commentsArray.forEach(comment => {
-                const commentElement = createCommentElement(comment.id, comment);
-                commentsList.appendChild(commentElement);
-            });
+        
+        return replyDiv;
+    }
+    
+    // Auth state observer
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // User sudah login
+            loginSection.classList.add('hidden');
+            userInfoSection.classList.remove('hidden');
+            userPhoto.src = user.photoURL;
+            userName.textContent = user.displayName;
+            
+            // Simpan/update data user di database
+            const userData = {
+                name: user.displayName,
+                photoURL: user.photoURL,
+                lastLogin: Date.now()
+            };
+            
+            database.ref('users/' + user.uid).update(userData)
+                .catch((error) => {
+                    console.error('Error menyimpan data user:', error);
+                });
+        } else {
+            // User belum login
+            loginSection.classList.remove('hidden');
+            userInfoSection.classList.add('hidden');
+        }
+    });
+    
+    // Realtime listener untuk komentar
+    database.ref('comments').orderByChild('timestamp').on('value', (snapshot) => {
+        const commentsData = snapshot.val();
+        commentsList.innerHTML = '';
+        
+        if (!commentsData) {
+            commentsList.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-comments text-3xl mb-3"></i>
+                    <p>Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Ubah object menjadi array dan urutkan berdasarkan timestamp (terbaru di atas)
+        const commentsArray = Object.entries(commentsData)
+            .map(([id, data]) => ({ id, ...data }))
+            .sort((a, b) => b.timestamp - a.timestamp);
+        
+        commentsArray.forEach(comment => {
+            const commentElement = createCommentElement(comment.id, comment);
+            commentsList.appendChild(commentElement);
         });
+    });
     </script>
     <!-- protect js -->
     <!-- <script>
