@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勉強会 - 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50">
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #dc2626;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b91c1c;
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Card hover effects */
+        .bg-white:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Button loading state */
+        .button-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .button-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            #sidebar {
+                width: 280px;
+            }
+
+            .text-4xl {
+                font-size: 2rem;
+            }
+
+            .text-6xl {
+                font-size: 3rem;
+            }
+        }
+
+        /* Focus states for accessibility */
+        button:focus,
+        select:focus,
+        a:focus {
+            outline: 2px solid #dc2626;
+            outline-offset: 2px;
+        }
+
+        /* Loading animation */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg fixed w-full z-50 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-red-600">勉強会 ２０２５</h1>
+                    </div>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#home"
+                            class="text-gray-900 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Beranda</a>
+                        <a href="#soal"
+                            class="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Soal
+                            Latihan</a>
+                        <a href="#materi"
+                            class="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Materi</a>
+                        <a href="#youtube"
+                            class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-sm font-medium">YouTube</a>
+                        <a href="#diskusi"
+                            class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-sm font-medium">
+                            Saran & Komentar</a>
+                        <a href="https://jlptonline.or.id/" target="_blank"
+                            class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-sm font-medium">Daftar
+                            JLPT</a>
+                        <a href="https://www.jlpt-overseas.jp/onlineresults/preinput.do" target="_blank"
+                            class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-sm font-medium">Cek
+                            Hasil JLPT</a>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button"
+                        class="text-gray-600 hover:text-red-600 focus:outline-none focus:text-red-600">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home"
+                    class="text-gray-900 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Beranda</a>
+                <a href="#soal"
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Soal
+                    Latihan</a>
+                <a href="#youtube"
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Video
+                    YouTube</a>
+                <a href="#materi"
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Materi</a>
+                <a href="#diskusi" 
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Saran & Komentar</a>
+                <a href="https://jlptonline.or.id/" target="_blank"
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Daftar
+                    JLPT</a>
+                <a href="https://www.jlpt-overseas.jp/onlineresults/preinput.do" target="_blank"
+                    class="text-gray-600 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">Cek Hasil
+                    JLPT</a>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
+
+    <!-- Sidebar Toggle Button -->
+
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        <!-- Hero Section -->
+        <section id="home" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                        🎯 日本語能力試験・勉強会
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8">
+                        ようこそ！
+                    </p>
+
+                    <!-- Fokus Grup -->
+                    <div class="bg-white/10 backdrop-blur rounded-lg p-6 mb-8 max-w-2xl mx-auto">
+                        <h2 class="text-xl font-semibold mb-4">🎯 Tujuan :</h2>
+                        <div class="space-y-2 text-left">
+                            <p class="flex items-center">
+                                <span class="text-green-300 mr-2">✅</span>
+                                Latihan soal JLPT tahun-tahun sebelumnya
+                            </p>
+                            <p class="flex items-center">
+                                <span class="text-green-300 mr-2">✅</span>
+                                Berbagi strategi belajar & pengalaman ujian
+                            </p>
+                            <p class="flex items-center">
+                                <span class="text-green-300 mr-2">✅</span>
+                                Motivasi & berproses bersama
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Quote -->
+                    <div class="bg-white/20 backdrop-blur rounded-lg p-6 max-w-xl mx-auto">
+                        <p class="text-lg italic">
+                            💭 "Jangan terburu-buru, tapi jangan berhenti."
+                        </p>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-white mb-3">Filter Level JLPT</h3>
+                        <select id="level-filter"
+                            class="w-lg px-3 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <option value="all">Semua Level</option>
+                            <option value="n5">N5</option>
+                            <option value="n4">N4</option>
+                            <option value="n3">N3</option>
+                            <option value="n2">N2</option>
+                            <option value="n1">N1</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                <p class="mt-2 text-gray-600">Memuat data...</p>
+            </div>
+        </div>
+
+        <!-- Soal Latihan Section -->
+        <section id="soal" class="py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">
+                    <i class="fas fa-question-circle text-red-600 mr-3"></i>
+                    Soal Latihan JLPT
+                </h2>
+                <div id="soal-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be loaded here -->
+                </div>
+            </div>
+        </section>
+        <!-- Materi Section -->
+        <section id="materi" class="py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">
+                    <i class="fas fa-book text-blue-600 mr-3"></i>
+                    File Materi Belajar
+                </h2>
+                <div id="materi-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be loaded here -->
+                </div>
+            </div>
+        </section>
+        <!-- Ganti section grup dengan YouTube -->
+        <section id="youtube" class="py-16 bg-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">
+                    <i class="fab fa-youtube text-red-600 mr-3"></i>
+                    Rekomendasi Youtube
+                </h2>
+                <div id="youtube-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be loaded here -->
+                </div>
+            </div>
+        </section>
+        <!-- Section komentar/diskusi  -->
+        <section id="diskusi" class="py-16 bg-gray-50">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-900 text-center mb-5">
+                    <i class="fas fa-comments text-blue-600 mr-3"></i>
+                    Komentar
+                </h2>
+                <p class="text-lg font-medium text-black text-center mb-12">Tanya apapun disini atau mau ngasih saran
+                    dan request materi? bisa banget</p>
+
+                <!-- Login Section -->
+                <div id="login-section" class="bg-white rounded-lg shadow-md p-6 mb-8 text-center">
+                    <h3 class="text-xl font-semibold mb-4">Login dulu untuk bisa komen</h3>
+                    <button id="google-login"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center mx-auto">
+                        <i class="fab fa-google mr-3"></i> Signin with Google
+                    </button>
+                </div>
+
+                <!-- User Info Section (akan muncul setelah login) -->
+                <div id="user-info" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+                    <div class="flex items-center mb-4">
+                        <img id="user-photo" class="w-12 h-12 rounded-full mr-4" src="" alt="Profile">
+                        <div>
+                            <h3 id="user-name" class="font-semibold text-lg"></h3>
+                            <button id="logout-btn" class="text-red-600 text-sm mt-1">Logout</button>
+                        </div>
+                    </div>
+
+                    <!-- Form Komentar -->
+                    <form id="comment-form" class="mt-4">
+                        <textarea id="comment-text" placeholder="Request materi atau saran? kirim aja disini"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            rows="4" required></textarea>
+                        <button type="submit"
+                            class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i> Kirim
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Daftar Komentar -->
+                <div id="comments-container" class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-6">Komentar Terbaru</h3>
+                    <div id="comments-list" class="space-y-6">
+                        <!-- Komentar akan dimuat di sini -->
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-comments text-3xl mb-3"></i>
+                            <p>Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h3 class="text-xl font-semibold mb-4">日本語能力試験・勉強会２０２５</h3>
+                <p class="text-gray-300 mb-4">Belajar bahasa Jepang bersama-sama menuju JLPT</p>
+                <p class="text-gray-400 text-sm">
+                    &copy; Benkyoukai 2025 | Founder - Ahmad Desuka | Developer Yuii
+                </p>
+            </div>
+        </div>
+    </footer>
+    <!-- Main js -->
+    <script>
+        // Global variables
+        let allData = {};
+        let currentFilter = 'all';
+
+        // DOM elements
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const levelFilter = document.getElementById('level-filter');
+        const loading = document.getElementById('loading');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            setupEventListeners();
+            fetchData();
+        });
+
+        // Event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            mobileMenuButton.addEventListener('click', toggleMobileMenu);
+
+            // Sidebar toggle
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            // Level filter
+            levelFilter.addEventListener('change', handleLevelFilter);
+
+            // Close mobile menu when clicking nav links
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // Close sidebar when clicking sidebar links
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', closeSidebar);
+            });
+
+            // Smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Toggle functions
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            sidebarOverlay.classList.toggle('hidden');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        // Filter handler
+        function handleLevelFilter(event) {
+            currentFilter = event.target.value;
+            renderFilteredData();
+        }
+
+        // Data fetching
+        async function fetchData() {
+            try {
+                showLoading();
+                const response = await fetch('/api/data');
+                const result = await response.json();
+
+                if (result.success) {
+                    allData = result.data;
+                    renderAllData();
+                } else {
+                    throw new Error(result.message || 'Gagal mengambil data');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Gagal memuat data. Silakan coba lagi nanti.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Loading functions
+        function showLoading() {
+            loading.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loading.classList.add('hidden');
+        }
+
+        // Error handling
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-20 right-4 bg-red-500 text-white px-4 py-2 rounded-lg z-50';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function renderAllData() {
+            renderSoalJLPT(allData.soalJLPT || []);
+            renderYouTubeVideos(allData.dataYouTube || []); // Ganti dari renderGrupWhatsApp
+            renderFileMateri(allData.fileMateri || []);
+        }
+
+        function renderFilteredData() {
+            const filteredSoal = filterByLevel(allData.soalJLPT || [], currentFilter);
+            const filteredYouTube = filterByLevel(allData.dataYouTube || [], currentFilter); // Ganti dari filteredGrup
+            const filteredMateri = filterByLevel(allData.fileMateri || [], currentFilter);
+
+            renderSoalJLPT(filteredSoal);
+            renderYouTubeVideos(filteredYouTube); // Ganti dari renderGrupWhatsApp
+            renderFileMateri(filteredMateri);
+        }
+
+        // Fungsi render baru untuk YouTube
+        function renderYouTubeVideos(data) {
+            const container = document.getElementById('youtube-grid');
+            container.innerHTML = '';
+
+            data.forEach(video => {
+                const card = createYouTubeCard(video);
+                container.appendChild(card);
+            });
+        }
+
+        // Fungsi untuk membuat card YouTube
+        function createYouTubeCard(video) {
+            const card = document.createElement('div');
+            card.className =
+                'group relative bg-gradient-to-br from-white via-red-50 to-pink-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 p-6 border border-gray-100 hover:border-red-200 transform hover:-translate-y-2 overflow-hidden';
+
+            const levelColor = getLevelColor(video.level);
+
+            card.innerHTML = `
+        <!-- Decorative background -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-gradient-to-br from-red-400 to-pink-500 transform translate-x-20 -translate-y-20"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-gradient-to-br from-red-400 to-orange-500 transform -translate-x-12 translate-y-12"></div>
+        </div>
+        
+        <!-- Header -->
+        <div class="relative flex items-center justify-between mb-4">
+            <span class="px-4 py-2 text-sm font-bold text-white rounded-full ${levelColor} shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-play mr-1"></i>${video.level}
+            </span>
+
+        </div>
+        
+        <!-- Thumbnail -->
+        <div class="relative mb-4 rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+            <img src="${video.thumbnail}" 
+                 alt="${video.title}" 
+                 class="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-500"
+                 onerror="this.src='https://via.placeholder.com/480x360/dc2626/ffffff?text=Video+Preview'">
+            <!-- Play overlay -->
+            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                    <i class="fas fa-play text-white text-xl ml-1"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="relative">
+            <h3 class="text-lg font-bold text-gray-900 mb-3 group-hover:text-red-700 transition-colors duration-300 line-clamp-2">
+                ${video.title}
+            </h3>
+            
+            <!-- Channel info -->
+            <div class="flex items-center justify-between mb-4 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                        <i class="fas fa-user text-red-600 text-xs"></i>
+                    </div>
+                    <span class="font-medium">${video.channel}</span>
+                </div>
+              
+            </div>
+        </div>
+        
+        <!-- Watch button -->
+        <button onclick="watchVideo('${video.link}', '${video.title}')" 
+                class="relative w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden group-button">
+            <div class="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-button-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative flex items-center justify-center">
+                <i class="fab fa-youtube mr-2 transform group-hover:animate-pulse text-lg"></i>
+                <span>Tonton Video</span>
+            </div>
+        </button>
+    `;
+
+            return card;
+        }
+
+        // Fungsi untuk menonton video
+        function watchVideo(url, title) {
+            if (url === '#') {
+                sweetAlert.show({
+                    title: 'Video Belum Tersedia',
+                    text: `Video "${title}" akan segera tersedia!`,
+                    icon: 'info',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
+            }
+
+            sweetAlert.show({
+                title: 'Buka Video YouTube',
+                text: `Anda akan diarahkan ke YouTube untuk menonton "${title}". Lanjutkan?`,
+                icon: 'info',
+                confirmButtonText: 'Ya, Tonton!',
+                showCancelButton: true,
+                cancelButtonText: 'Batal',
+                onConfirm: () => {
+                    window.open(url, '_blank');
+                    setTimeout(() => {
+                        sweetAlert.show({
+                            title: 'Selamat Menonton!',
+                            text: 'Video telah terbuka di tab baru. Semangat belajar!',
+                            icon: 'success',
+                            confirmButtonText: 'Tutup'
+                        });
+                    }, 500);
+                }
+            });
+        }
+
+        function filterByLevel(data, level) {
+            if (level === 'all') return data;
+            return data.filter(item =>
+                item.level?.toLowerCase() === level || item.level === 'All'
+            );
+        }
+
+        function renderSoalJLPT(data) {
+            const container = document.getElementById('soal-grid');
+            container.innerHTML = '';
+
+            data.forEach(soal => {
+                const card = createSoalCard(soal);
+                container.appendChild(card);
+            });
+        }
+
+
+        function renderFileMateri(data) {
+            const container = document.getElementById('materi-grid');
+            container.innerHTML = '';
+
+            data.forEach(materi => {
+                const card = createMateriCard(materi);
+                container.appendChild(card);
+            });
+        }
+
+        // Card creation functions dengan desain yang lebih menarik
+        function createSoalCard(soal) {
+            const card = document.createElement('div');
+            card.className =
+                'group relative bg-gradient-to-br from-white via-gray-50 to-blue-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 p-6 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-2 overflow-hidden';
+
+            const levelColor = getLevelColor(soal.level);
+            const difficultyStars = getDifficultyStars(soal.difficulty);
+
+            card.innerHTML = `
+        <!-- Decorative background pattern -->
+        <div class="absolute inset-0 opacity-5">
+            <div class="absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 transform translate-x-16 -translate-y-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-gradient-to-br from-pink-400 to-red-500 transform -translate-x-8 translate-y-8"></div>
+        </div>
+        
+        <!-- Header dengan animasi -->
+        <div class="relative flex items-center justify-between mb-5">
+            <div class="flex items-center space-x-3">
+                <span class="px-4 py-2 text-sm font-bold text-white rounded-full ${levelColor} shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-award mr-1"></i>${soal.level}
+                </span>
+                <div class="flex items-center space-x-1">
+                    ${difficultyStars}
+                </div>
+            </div>
+            <span class="text-sm font-semibold text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                <i class="fas fa-calendar-alt mr-1 text-blue-500"></i>${soal.year}
+            </span>
+        </div>
+        
+        <!-- Icon dan Title -->
+        <div class="relative flex items-start mb-4">
+            <div class="flex-shrink-0 mr-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                    <i class="fas fa-file-alt text-white text-lg"></i>
+                </div>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">
+                    ${soal.title}
+                </h3>
+                <p class="text-gray-600 leading-relaxed">${soal.description}</p>
+            </div>
+        </div>
+        
+        <!-- Stats dengan icons -->
+        <div class="relative flex items-center justify-between mb-6 p-3 bg-white/50 rounded-xl backdrop-blur-sm">
+            <div class="flex items-center text-sm text-gray-700 font-medium">
+                <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-2">
+                    <i class="fas fa-signal text-orange-600"></i>
+                </div>
+                <span>${soal.difficulty}</span>
+            </div>
+        </div>
+        
+        <!-- Download button dengan efek -->
+        <button onclick="downloadFile('${soal.downloadUrl}', '${soal.title}')" 
+                class="relative w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden group-button">
+            <div class="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-button-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative flex items-center justify-center">
+                <i class="fas fa-download mr-2 transform group-hover:animate-bounce"></i>
+                <span>Download Soal</span>
+            </div>
+            <!-- Shimmer effect -->
+            <div class="absolute inset-0 -top-full bg-gradient-to-b from-transparent via-white/20 to-transparent transform skew-x-12 group-hover:animate-pulse"></div>
+        </button>
+    `;
+
+            return card;
+        }
+
+
+        function createMateriCard(materi) {
+            const card = document.createElement('div');
+            card.className =
+                'group relative bg-gradient-to-br from-white via-blue-50 to-indigo-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 p-6 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-2 overflow-hidden';
+
+            const levelColor = getLevelColor(materi.level);
+            const typeIcon = getTypeIcon(materi.type);
+            const typeColor = getTypeColor(materi.type);
+
+            card.innerHTML = `
+        <!-- Decorative background -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-0 w-36 h-36 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 transform translate-x-18 -translate-y-18"></div>
+            <div class="absolute bottom-0 left-0 w-28 h-28 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 transform -translate-x-10 translate-y-10"></div>
+        </div>
+        
+        <!-- Header -->
+        <div class="relative flex items-center justify-between mb-5">
+            <span class="px-4 py-2 text-sm font-bold text-white rounded-full ${levelColor} shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-graduation-cap mr-1"></i>${materi.level}
+            </span>
+            <span class="px-3 py-1 text-xs font-semibold ${typeColor} text-white rounded-full shadow-md">
+                <i class="${typeIcon} mr-1"></i>${materi.type}
+            </span>
+        </div>
+        
+        <!-- Icon dan Title -->
+        <div class="relative flex items-start mb-4">
+            <div class="flex-shrink-0 mr-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                    <i class="${typeIcon} text-white text-lg"></i>
+                </div>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">
+                    ${materi.title}
+                </h3>
+                <p class="text-gray-600 leading-relaxed">${materi.description}</p>
+            </div>
+        </div>
+        
+        <!-- File info -->
+        <div class="relative flex items-center justify-between mb-6 p-3 bg-white/60 rounded-xl backdrop-blur-sm">
+            ${materi.pages !== '-' ? `
+                <div class="flex items-center text-sm text-gray-700 font-medium">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-2">
+                        <i class="fas fa-book-open text-purple-600"></i>
+                    </div>
+                    <span>${materi.pages} Halaman</span>
+                </div>
+            ` : '<div></div>'}
+        </div>
+        
+        <!-- Download button -->
+        <button onclick="downloadFile('${materi.downloadUrl}', '${materi.title}')" 
+                class="relative w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden group-button">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-700 opacity-0 group-button-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative flex items-center justify-center">
+                <i class="fas fa-download mr-2 transform group-hover:animate-bounce"></i>
+                <span>Download Materi</span>
+            </div>
+            <!-- Shimmer effect -->
+            <div class="absolute inset-0 -top-full bg-gradient-to-b from-transparent via-white/20 to-transparent transform skew-x-12 group-hover:animate-pulse"></div>
+        </button>
+    `;
+
+            return card;
+        }
+
+        // Helper functions yang diperbaiki
+        function getLevelColor(level) {
+            const colors = {
+                'N5': 'bg-gradient-to-r from-green-500 to-emerald-600',
+                'N4': 'bg-gradient-to-r from-blue-500 to-cyan-600',
+                'N3': 'bg-gradient-to-r from-yellow-500 to-orange-500',
+                'N2': 'bg-gradient-to-r from-orange-500 to-red-500',
+                'N1': 'bg-gradient-to-r from-red-500 to-pink-600',
+                'All': 'bg-gradient-to-r from-purple-500 to-indigo-600'
+            };
+            return colors[level] || 'bg-gradient-to-r from-gray-500 to-gray-600';
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                'PDF': 'fas fa-file-pdf',
+                'ZIP': 'fas fa-file-archive',
+                'MP3': 'fas fa-music',
+                'VIDEO': 'fas fa-play-circle'
+            };
+            return icons[type] || 'fas fa-file';
+        }
+
+        function getTypeColor(type) {
+            const colors = {
+                'PDF': 'bg-gradient-to-r from-red-500 to-red-600',
+                'ZIP': 'bg-gradient-to-r from-yellow-500 to-orange-500',
+                'MP3': 'bg-gradient-to-r from-green-500 to-emerald-600',
+                'VIDEO': 'bg-gradient-to-r from-purple-500 to-indigo-600'
+            };
+            return colors[type] || 'bg-gradient-to-r from-gray-500 to-gray-600';
+        }
+
+        function getDifficultyStars(difficulty) {
+            const levels = {
+                'Mudah': 1,
+                'Sedang': 2,
+                'Sulit': 3,
+                'Sangat Sulit': 4,
+                'Expert': 5
+            };
+
+            const starCount = levels[difficulty] || 3;
+            let stars = '';
+
+            for (let i = 0; i < 5; i++) {
+                if (i < starCount) {
+                    stars += '<i class="fas fa-star text-yellow-400 text-xs"></i>';
+                } else {
+                    stars += '<i class="fas fa-star text-gray-300 text-xs"></i>';
+                }
+            }
+
+            return stars;
+        }
+        // Sweet Alert dengan animasi smooth
+        class SweetAlert {
+            constructor() {
+                this.createOverlay();
+            }
+
+            createOverlay() {
+                // Create overlay if doesn't exist
+                if (!document.getElementById('sweet-alert-overlay')) {
+                    const overlay = document.createElement('div');
+                    overlay.id = 'sweet-alert-overlay';
+                    overlay.className =
+                        'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-all duration-300 ease-out';
+                    document.body.appendChild(overlay);
+                }
+            }
+
+            show(options) {
+                const {
+                    title = 'Notification',
+                        text = '',
+                        icon = 'info',
+                        confirmButtonText = 'OK',
+                        showCancelButton = false,
+                        cancelButtonText = 'Cancel',
+                        onConfirm = () => {},
+                        onCancel = () => {}
+                } = options;
+
+                // Remove existing alert if any
+                this.hide();
+
+                const overlay = document.getElementById('sweet-alert-overlay');
+
+                // Create alert container
+                const alertContainer = document.createElement('div');
+                alertContainer.id = 'sweet-alert-container';
+                alertContainer.className = 'fixed inset-0 flex items-center justify-center z-50 p-4';
+
+                // Get icon details
+                const iconDetails = this.getIconDetails(icon);
+
+                alertContainer.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform scale-95 opacity-0 transition-all duration-300 ease-out" id="sweet-alert-modal">
+                <!-- Header dengan icon -->
+                <div class="text-center p-6 pb-4">
+                    <div class="mx-auto flex items-center justify-center w-16 h-16 rounded-full ${iconDetails.bgColor} mb-4 transform scale-0 transition-transform duration-500 ease-out" id="alert-icon">
+                        <i class="${iconDetails.icon} text-2xl ${iconDetails.textColor}"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">${title}</h3>
+                    ${text ? `<p class="text-gray-600 leading-relaxed">${text}</p>` : ''}
+                </div>
+                
+                <!-- Buttons -->
+                <div class="px-6 pb-6">
+                    <div class="flex space-x-3">
+                        <button id="sweet-alert-confirm" 
+                                class="flex-1 bg-gradient-to-r ${iconDetails.buttonGradient} text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                            ${confirmButtonText}
+                        </button>
+                        ${showCancelButton ? `
+                            <button id="sweet-alert-cancel" 
+                                    class="flex-1 bg-gradient-to-r from-gray-400 to-gray-500 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                                ${cancelButtonText}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+                document.body.appendChild(alertContainer);
+
+                // Show animation
+                requestAnimationFrame(() => {
+                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                    overlay.classList.add('opacity-100', 'pointer-events-auto');
+
+                    const modal = document.getElementById('sweet-alert-modal');
+                    const icon = document.getElementById('alert-icon');
+
+                    setTimeout(() => {
+                        modal.classList.remove('scale-95', 'opacity-0');
+                        modal.classList.add('scale-100', 'opacity-100');
+                    }, 50);
+
+                    setTimeout(() => {
+                        icon.classList.remove('scale-0');
+                        icon.classList.add('scale-100');
+                    }, 200);
+                });
+
+                // Event listeners
+                document.getElementById('sweet-alert-confirm').addEventListener('click', () => {
+                    this.hide(() => onConfirm());
+                });
+
+                if (showCancelButton) {
+                    document.getElementById('sweet-alert-cancel').addEventListener('click', () => {
+                        this.hide(() => onCancel());
+                    });
+                }
+
+                // Close on overlay click
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        this.hide();
+                    }
+                });
+
+                // Close on ESC key
+                const escHandler = (e) => {
+                    if (e.key === 'Escape') {
+                        this.hide();
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                };
+                document.addEventListener('keydown', escHandler);
+            }
+
+            hide(callback = () => {}) {
+                const overlay = document.getElementById('sweet-alert-overlay');
+                const container = document.getElementById('sweet-alert-container');
+                const modal = document.getElementById('sweet-alert-modal');
+
+                if (overlay && container) {
+                    // Hide animation
+                    if (modal) {
+                        modal.classList.remove('scale-100', 'opacity-100');
+                        modal.classList.add('scale-95', 'opacity-0');
+                    }
+
+                    overlay.classList.remove('opacity-100', 'pointer-events-auto');
+                    overlay.classList.add('opacity-0', 'pointer-events-none');
+
+                    setTimeout(() => {
+                        if (container && container.parentNode) {
+                            container.parentNode.removeChild(container);
+                        }
+                        callback();
+                    }, 300);
+                } else {
+                    callback();
+                }
+            }
+
+            getIconDetails(icon) {
+                const icons = {
+                    'success': {
+                        icon: 'fas fa-check',
+                        bgColor: 'bg-green-100',
+                        textColor: 'text-green-600',
+                        buttonGradient: 'from-green-500 to-emerald-600'
+                    },
+                    'error': {
+                        icon: 'fas fa-times',
+                        bgColor: 'bg-red-100',
+                        textColor: 'text-red-600',
+                        buttonGradient: 'from-red-500 to-pink-600'
+                    },
+                    'warning': {
+                        icon: 'fas fa-exclamation-triangle',
+                        bgColor: 'bg-yellow-100',
+                        textColor: 'text-yellow-600',
+                        buttonGradient: 'from-yellow-500 to-orange-500'
+                    },
+                    'info': {
+                        icon: 'fas fa-info-circle',
+                        bgColor: 'bg-blue-100',
+                        textColor: 'text-blue-600',
+                        buttonGradient: 'from-blue-500 to-indigo-600'
+                    },
+                    'download': {
+                        icon: 'fas fa-download',
+                        bgColor: 'bg-purple-100',
+                        textColor: 'text-purple-600',
+                        buttonGradient: 'from-purple-500 to-indigo-600'
+                    },
+                    'whatsapp': {
+                        icon: 'fab fa-whatsapp',
+                        bgColor: 'bg-green-100',
+                        textColor: 'text-green-600',
+                        buttonGradient: 'from-green-500 to-emerald-600'
+                    }
+                };
+                return icons[icon] || icons['info'];
+            }
+        }
+
+        // Initialize Sweet Alert
+        const sweetAlert = new SweetAlert();
+
+        // Action functions dengan Sweet Alert
+        function downloadFile(url, title) {
+            if (url === '#') {
+                sweetAlert.show({
+                    title: 'Segera Hadir!',
+                    text: `Fitur download untuk "${title}" akan segera tersedia. Mohon tunggu update selanjutnya!`,
+                    icon: 'download',
+                    confirmButtonText: 'Mengerti',
+                    onConfirm: () => {
+                        // Add some sparkle effect
+                        createSparkleEffect();
+                    }
+                });
+                return;
+            }
+
+            // Show loading alert first
+            sweetAlert.show({
+                title: 'Memulai Download...',
+                text: `Mengunduh "${title}"`,
+                icon: 'download',
+                confirmButtonText: 'OK'
+            });
+
+            // Create temporary link for download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = title;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Hide alert after short delay
+            setTimeout(() => {
+                sweetAlert.hide();
+            }, 1500);
+        }
+
+        function joinGroup(url, name) {
+            if (url === '#') {
+                sweetAlert.show({
+                    title: 'Link Belum Tersedia',
+                    text: `Link untuk bergabung dengan grup "${name}" akan segera tersedia!`,
+                    icon: 'whatsapp',
+                    confirmButtonText: 'Mengerti',
+                    showCancelButton: true,
+                    cancelButtonText: 'Batal',
+                    onConfirm: () => {
+                        // Show notification effect
+                        showNotification('Kami akan memberitahu Anda saat link tersedia!', 'info');
+                    }
+                });
+                return;
+            }
+
+            // Show confirmation before joining
+            sweetAlert.show({
+                title: 'Bergabung dengan Grup',
+                text: `Anda akan diarahkan ke WhatsApp untuk bergabung dengan grup "${name}". Lanjutkan?`,
+                icon: 'whatsapp',
+                confirmButtonText: 'Ya, Gabung!',
+                showCancelButton: true,
+                cancelButtonText: 'Batal',
+                onConfirm: () => {
+                    // Open WhatsApp group link
+                    window.open(url, '_blank');
+
+                    // Show success message
+                    setTimeout(() => {
+                        sweetAlert.show({
+                            title: 'Berhasil!',
+                            text: 'WhatsApp telah terbuka. Selamat bergabung!',
+                            icon: 'success',
+                            confirmButtonText: 'Tutup'
+                        });
+                    }, 500);
+                }
+            });
+        }
+
+        // Bonus: Sparkle effect function
+        function createSparkleEffect() {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'fixed pointer-events-none z-50';
+                    sparkle.innerHTML = '<i class="fas fa-star text-yellow-400"></i>';
+                    sparkle.style.left = Math.random() * window.innerWidth + 'px';
+                    sparkle.style.top = Math.random() * window.innerHeight + 'px';
+                    sparkle.style.fontSize = Math.random() * 20 + 10 + 'px';
+                    sparkle.style.animation = 'sparkle 1s ease-out forwards';
+
+                    document.body.appendChild(sparkle);
+
+                    setTimeout(() => {
+                        if (sparkle.parentNode) {
+                            sparkle.parentNode.removeChild(sparkle);
+                        }
+                    }, 1000);
+                }, i * 100);
+            }
+        }
+
+        // Bonus: Simple notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const colors = {
+                'success': 'from-green-500 to-emerald-600',
+                'error': 'from-red-500 to-pink-600',
+                'warning': 'from-yellow-500 to-orange-500',
+                'info': 'from-blue-500 to-indigo-600'
+            };
+
+            notification.className =
+                `fixed top-4 right-4 bg-gradient-to-r ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Show animation
+            requestAnimationFrame(() => {
+                notification.classList.remove('translate-x-full', 'opacity-0');
+                notification.classList.add('translate-x-0', 'opacity-100');
+            });
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('translate-x-0', 'opacity-100');
+                notification.classList.add('translate-x-full', 'opacity-0');
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Responsive design adjustments
+        function handleResize() {
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.add('hidden');
+                closeSidebar();
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in-up');
+                }
+            });
+        }, observerOptions);
+        const sparkleStyle = document.createElement('style');
+        sparkleStyle.textContent = `
+    @keyframes sparkle {
+        0% {
+            transform: scale(0) rotate(0deg);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1) rotate(180deg);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(0) rotate(360deg);
+            opacity: 0;
+        }
+    }
+`;
+        document.head.appendChild(sparkleStyle);
+
+        // Observe sections for animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section');
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+    <!-- Core js  -->
+    <script>
+        // Konfigurasi Firebase (ganti dengan konfigurasi Anda)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgZmM850UYofD1p8zAAcntWlQczD462II",
+            authDomain: "projectslastdatabase.firebaseapp.com",
+            databaseURL: "https://projectslastdatabase-default-rtdb.firebaseio.com",
+            projectId: "projectslastdatabase",
+            storageBucket: "projectslastdatabase.firebasestorage.app",
+            messagingSenderId: "1093767116848",
+            appId: "1:1093767116848:web:cbc86211b86efd11c115f5",
+            measurementId: "G-TF5YS628BB"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Elemen DOM
+        const loginSection = document.getElementById('login-section');
+        const userInfoSection = document.getElementById('user-info');
+        const googleLoginBtn = document.getElementById('google-login');
+        const logoutBtn = document.getElementById('logout-btn');
+        const commentForm = document.getElementById('comment-form');
+        const commentsList = document.getElementById('comments-list');
+        const userPhoto = document.getElementById('user-photo');
+        const userName = document.getElementById('user-name');
+
+        // Fungsi sanitasi HTML untuk mencegah XSS
+        function sanitizeHTML(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Login dengan Google
+        googleLoginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // Login berhasil
+                    console.log('Login berhasil:', result.user);
+                })
+                .catch((error) => {
+                    console.error('Error login:', error);
+                    sweetAlert.show({
+                        title: 'Login Gagal',
+                        text: 'Terjadi kesalahan saat login. Silakan coba lagi.',
+                        icon: 'error',
+                        confirmButtonText: 'Mengerti'
+                    });
+                });
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut()
+                .then(() => {
+                    console.log('Logout berhasil');
+                })
+                .catch((error) => {
+                    console.error('Error logout:', error);
+                });
+        });
+
+        // Kirim komentar
+        commentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const commentText = document.getElementById('comment-text').value.trim();
+            if (!commentText) return;
+
+            const user = auth.currentUser;
+            if (!user) {
+                sweetAlert.show({
+                    title: 'Perlu Login',
+                    text: 'Anda harus login terlebih dahulu untuk mengirim komentar.',
+                    icon: 'warning',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
+            }
+
+            // Sanitasi input sebelum disimpan
+            const sanitizedText = sanitizeHTML(commentText);
+
+            // Simpan komentar ke database
+            const newCommentKey = database.ref().child('comments').push().key;
+            const timestamp = Date.now();
+
+            const commentData = {
+                uid: user.uid,
+                user: {
+                    name: user.displayName,
+                    photoURL: user.photoURL
+                },
+                text: sanitizedText,
+                timestamp: timestamp,
+                replies: {}
+            };
+
+            const updates = {};
+            updates['/comments/' + newCommentKey] = commentData;
+            updates['/users/' + user.uid + '/lastActivity'] = timestamp;
+
+            database.ref().update(updates)
+                .then(() => {
+                    console.log('Komentar berhasil dikirim');
+                    document.getElementById('comment-text').value = '';
+                })
+                .catch((error) => {
+                    console.error('Error mengirim komentar:', error);
+                    sweetAlert.show({
+                        title: 'Gagal Mengirim',
+                        text: 'Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.',
+                        icon: 'error',
+                        confirmButtonText: 'Mengerti'
+                    });
+                });
+        });
+
+        // Fungsi untuk membuat elemen komentar
+        function createCommentElement(commentId, commentData) {
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'comment bg-gray-50 p-4 rounded-lg';
+            commentDiv.id = 'comment-' + commentId;
+
+            const date = new Date(commentData.timestamp);
+            const formattedDate = date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Cek apakah user saat ini adalah pemilik komentar
+            const currentUser = auth.currentUser;
+            const isCommentOwner = currentUser && currentUser.uid === commentData.uid;
+
+            commentDiv.innerHTML = `
+        <div class="flex items-start">
+            <img src="${sanitizeHTML(commentData.user.photoURL)}" alt="${sanitizeHTML(commentData.user.name)}" class="w-10 h-10 rounded-full mr-3">
+            <div class="flex-1">
+                <div class="flex justify-between items-start">
+                    <h4 class="font-semibold">${sanitizeHTML(commentData.user.name)}</h4>
+                    <div class="flex items-center">
+                        <span class="text-sm text-gray-500 mr-2">${formattedDate}</span>
+                        ${isCommentOwner ? `
+                            <button class="delete-comment text-red-600 hover:text-red-800 text-sm" data-comment-id="${commentId}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <p class="mt-2 text-gray-700">${commentData.text}</p>
+                <button class="reply-btn mt-2 text-blue-600 text-sm font-medium" data-comment-id="${commentId}">
+                    <i class="fas fa-reply mr-1"></i> Balas
+                </button>
+            </div>
+        </div>
+        <div class="reply-form mt-3 ml-12 hidden">
+            <textarea class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Tulis balasan..."></textarea>
+            <div class="mt-2 flex justify-end">
+                <button class="cancel-reply bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg mr-2">Batal</button>
+                <button class="submit-reply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Kirim</button>
+            </div>
+        </div>
+        <div class="replies-container mt-4 ml-12"></div>
+    `;
+
+            // Event listener untuk tombol hapus komentar
+            if (isCommentOwner) {
+                const deleteBtn = commentDiv.querySelector('.delete-comment');
+                deleteBtn.addEventListener('click', () => {
+                    sweetAlert.show({
+                        title: 'Hapus Komentar',
+                        text: 'Apakah Anda yakin ingin menghapus komentar ini?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        onConfirm: () => {
+                            database.ref('comments/' + commentId).remove()
+                                .then(() => {
+                                    console.log('Komentar berhasil dihapus');
+                                })
+                                .catch((error) => {
+                                    console.error('Error menghapus komentar:', error);
+                                    sweetAlert.show({
+                                        title: 'Gagal Menghapus',
+                                        text: 'Terjadi kesalahan saat menghapus komentar.',
+                                        icon: 'error',
+                                        confirmButtonText: 'Mengerti'
+                                    });
+                                });
+                        }
+                    });
+                });
+            }
+
+            // Event listener untuk tombol balas
+            const replyBtn = commentDiv.querySelector('.reply-btn');
+            const replyForm = commentDiv.querySelector('.reply-form');
+            const cancelReplyBtn = commentDiv.querySelector('.cancel-reply');
+            const submitReplyBtn = commentDiv.querySelector('.submit-reply');
+            const replyTextarea = commentDiv.querySelector('textarea');
+
+            replyBtn.addEventListener('click', () => {
+                if (!auth.currentUser) {
+                    sweetAlert.show({
+                        title: 'Perlu Login',
+                        text: 'Anda harus login terlebih dahulu untuk membalas komentar.',
+                        icon: 'warning',
+                        confirmButtonText: 'Mengerti'
+                    });
+                    return;
+                }
+                replyForm.classList.toggle('hidden');
+            });
+
+            cancelReplyBtn.addEventListener('click', () => {
+                replyForm.classList.add('hidden');
+                replyTextarea.value = '';
+            });
+
+            submitReplyBtn.addEventListener('click', () => {
+                const replyText = replyTextarea.value.trim();
+                if (!replyText) return;
+
+                const user = auth.currentUser;
+                const newReplyKey = database.ref().child('replies').push().key;
+                const timestamp = Date.now();
+
+                // Sanitasi input sebelum disimpan
+                const sanitizedText = sanitizeHTML(replyText);
+
+                const replyData = {
+                    uid: user.uid,
+                    user: {
+                        name: user.displayName,
+                        photoURL: user.photoURL
+                    },
+                    text: sanitizedText,
+                    timestamp: timestamp
+                };
+
+                const updates = {};
+                updates[`/comments/${commentId}/replies/${newReplyKey}`] = replyData;
+                updates['/users/' + user.uid + '/lastActivity'] = timestamp;
+
+                database.ref().update(updates)
+                    .then(() => {
+                        console.log('Balasan berhasil dikirim');
+                        replyTextarea.value = '';
+                        replyForm.classList.add('hidden');
+                    })
+                    .catch((error) => {
+                        console.error('Error mengirim balasan:', error);
+                        sweetAlert.show({
+                            title: 'Gagal Mengirim',
+                            text: 'Terjadi kesalahan saat mengirim balasan. Silakan coba lagi.',
+                            icon: 'error',
+                            confirmButtonText: 'Mengerti'
+                        });
+                    });
+            });
+
+            // Tambahkan balasan jika ada
+            if (commentData.replies) {
+                const repliesContainer = commentDiv.querySelector('.replies-container');
+                Object.entries(commentData.replies).forEach(([replyId, replyData]) => {
+                    const replyElement = createReplyElement(replyId, replyData, commentId);
+                    repliesContainer.appendChild(replyElement);
+                });
+            }
+
+            return commentDiv;
+        }
+
+        // Fungsi untuk membuat elemen balasan
+        function createReplyElement(replyId, replyData, commentId) {
+            const replyDiv = document.createElement('div');
+            replyDiv.className = 'reply bg-white p-3 rounded-lg border border-gray-200 mt-3';
+            replyDiv.id = `reply-${commentId}-${replyId}`;
+
+            const date = new Date(replyData.timestamp);
+            const formattedDate = date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Cek apakah user saat ini adalah pemilik balasan
+            const currentUser = auth.currentUser;
+            const isReplyOwner = currentUser && currentUser.uid === replyData.uid;
+
+            replyDiv.innerHTML = `
+        <div class="flex items-start">
+            <img src="${sanitizeHTML(replyData.user.photoURL)}" alt="${sanitizeHTML(replyData.user.name)}" class="w-8 h-8 rounded-full mr-3">
+            <div class="flex-1">
+                <div class="flex justify-between items-start">
+                    <h5 class="font-semibold text-sm">${sanitizeHTML(replyData.user.name)}</h5>
+                    <div class="flex items-center">
+                        <span class="text-xs text-gray-500 mr-2">${formattedDate}</span>
+                        ${isReplyOwner ? `
+                            <button class="delete-reply text-red-600 hover:text-red-800 text-xs" data-comment-id="${commentId}" data-reply-id="${replyId}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <p class="mt-1 text-gray-700 text-sm">${replyData.text}</p>
+            </div>
+        </div>
+    `;
+
+            // Event listener untuk tombol hapus balasan
+            if (isReplyOwner) {
+                const deleteBtn = replyDiv.querySelector('.delete-reply');
+                deleteBtn.addEventListener('click', () => {
+                    sweetAlert.show({
+                        title: 'Hapus Balasan',
+                        text: 'Apakah Anda yakin ingin menghapus balasan ini?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        onConfirm: () => {
+                            database.ref(`comments/${commentId}/replies/${replyId}`).remove()
+                                .then(() => {
+                                    console.log('Balasan berhasil dihapus');
+                                })
+                                .catch((error) => {
+                                    console.error('Error menghapus balasan:', error);
+                                    sweetAlert.show({
+                                        title: 'Gagal Menghapus',
+                                        text: 'Terjadi kesalahan saat menghapus balasan.',
+                                        icon: 'error',
+                                        confirmButtonText: 'Mengerti'
+                                    });
+                                });
+                        }
+                    });
+                });
+            }
+
+            return replyDiv;
+        }
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User sudah login
+                loginSection.classList.add('hidden');
+                userInfoSection.classList.remove('hidden');
+                userPhoto.src = user.photoURL;
+                userName.textContent = user.displayName;
+
+                // Simpan/update data user di database
+                const userData = {
+                    name: user.displayName,
+                    photoURL: user.photoURL,
+                    lastLogin: Date.now()
+                };
+
+                database.ref('users/' + user.uid).update(userData)
+                    .catch((error) => {
+                        console.error('Error menyimpan data user:', error);
+                    });
+            } else {
+                // User belum login
+                loginSection.classList.remove('hidden');
+                userInfoSection.classList.add('hidden');
+            }
+
+            // Perbarui semua komentar untuk menampilkan/menyembunyikan tombol hapus
+            const allComments = document.querySelectorAll('.comment');
+            allComments.forEach(comment => {
+                const commentId = comment.id.replace('comment-', '');
+                const commentData = database.ref('comments/' + commentId).once('value')
+                    .then(snapshot => {
+                        if (snapshot.exists()) {
+                            const commentElement = createCommentElement(commentId, snapshot.val());
+                            comment.parentNode.replaceChild(commentElement, comment);
+                        }
+                    });
+            });
+        });
+
+        // Realtime listener untuk komentar
+        database.ref('comments').orderByChild('timestamp').on('value', (snapshot) => {
+            const commentsData = snapshot.val();
+            commentsList.innerHTML = '';
+
+            if (!commentsData) {
+                commentsList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-comments text-3xl mb-3"></i>
+                <p>Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+            </div>
+        `;
+                return;
+            }
+
+            // Ubah object menjadi array dan urutkan berdasarkan timestamp (terbaru di atas)
+            const commentsArray = Object.entries(commentsData)
+                .map(([id, data]) => ({
+                    id,
+                    ...data
+                }))
+                .sort((a, b) => b.timestamp - a.timestamp);
+
+            commentsArray.forEach(comment => {
+                const commentElement = createCommentElement(comment.id, comment);
+                commentsList.appendChild(commentElement);
+            });
+        });
+    </script>
+    <!-- protect js -->
+    <script>
+        // Disable klik kanan
+        document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+        }, false);
+
+        // Disable beberapa shortcut
+        document.addEventListener("keydown", function (e) {
+            // F12
+            if (e.key === "F12") {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+            if (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) {
+                e.preventDefault();
+            }
+            // Ctrl+U (view source)
+            if (e.ctrlKey && e.key === "u") {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
