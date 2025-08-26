@@ -182,6 +182,16 @@ const fileMateri = [
     type: 'PDF',
     pages: 100,
     downloadUrl: 'https://sites.google.com/view/jf-irodori/halaman-pemelajar'
+  },
+  {
+    id: 7,
+    title: 'Paket Belajar N3 ',
+    description: 'lengkap 3 file materi',
+    category: 'materi',
+    level: 'N3',
+    type: 'PDF',
+    pages: 100,
+    downloadUrl: 'https://drive.google.com/drive/folders/1CCpmY_IARfGHfKs54XjIYwDk-ZJFOE7g?usp=sharing'
   }
 ];
 
