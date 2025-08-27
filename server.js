@@ -195,19 +195,44 @@ const fileMateri = [
   }
 ];
 
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Data untuk files SSW
+const filesSw = [
+  {
+    id: 1,
+    title: 'Paket Lengkap SSW Pengolahan Makanan',
+    thumbnail: 'https://i.postimg.cc/Hnyrtj6W/Screenshot-2025-08-27-145558.png',
+    link: 'https://justpaste.it/ls/joz8y/5ic8h4p7sbjwfyb7'
+  },
+  {
+    id: 2,
+    title: 'Paket Lengkap SSW Restoran',
+    thumbnail: 'https://i.postimg.cc/KvTqH2jR/Screenshot-2025-08-27-145648.png',
+    link: 'https://justpaste.it/ls/arebm/zy0t8ruxfcrh6nrg'
+  },
+  {
+    id: 3,
+    title: 'PDF Book SSW Kaigo (Perawat)',
+    thumbnail: 'https://i.postimg.cc/mkCY8Tj4/Screenshot-2025-08-27-145748.png',
+    link: 'https://drive.google.com/file/d/1IJIgfLozJSq-WSLt01iPnw8jZC4wK_pF/view'
+  },
+  {
+    id: 4,
+    title: 'PDF Book SSW Perkebunan & Pertanian',
+    thumbnail: 'https://i.postimg.cc/mZpWsBTj/Screenshot-2025-08-27-150058.png',
+    link: 'https://japanvitta.com/agri-pdf-download/5'
+  }
+];
 
+// Update API data endpoint untuk include filesSw
 app.get('/api/data', (req, res) => {
   try {
     res.json({
       success: true,
       data: {
         soalJLPT: soalJLPT,
-        dataYouTube: dataYouTube, // Ganti dari grupWhatsApp
-        fileMateri: fileMateri
+        dataYouTube: dataYouTube,
+        fileMateri: fileMateri,
+        filesSw: filesSw  // Tambahkan ini
       }
     });
   } catch (error) {
@@ -219,7 +244,7 @@ app.get('/api/data', (req, res) => {
   }
 });
 
-// Update switch case di endpoint kategori
+// Update switch case untuk kategori SSW
 app.get('/api/data/:category', (req, res) => {
   try {
     const { category } = req.params;
@@ -229,11 +254,14 @@ app.get('/api/data/:category', (req, res) => {
       case 'soal':
         data = soalJLPT;
         break;
-      case 'youtube': // Ganti dari 'grup'
-        data = dataYouTube; // Ganti dari grupWhatsApp
+      case 'youtube':
+        data = dataYouTube;
         break;
       case 'materi':
         data = fileMateri;
+        break;
+      case 'ssw':  // Tambahkan case baru
+        data = filesSw;
         break;
       default:
         return res.status(400).json({
@@ -253,6 +281,10 @@ app.get('/api/data/:category', (req, res) => {
       error: error.message
     });
   }
+});
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Update switch case di endpoint filter level
